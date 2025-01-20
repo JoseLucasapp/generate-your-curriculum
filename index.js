@@ -3,6 +3,13 @@ const workExperienceList = []
 const educationList = []
 const coursesList = []
 
+const pdfGenerator = (data) => {
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF();
+    pdf.text("Olá, este é um PDF gerado com JavaScript!", 10, 10);
+    pdf.save("meu-documento.pdf");
+}
+
 document.getElementById("submit").addEventListener("click", (e) => {
     e.preventDefault()
 

@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editar PDF ao Vivo</title>
+</head>
+<body>
+    <div>
+        <input type="file" id="imagem" accept="image/*">
+        <button id="atualizar-pdf">Atualizar PDF</button>
+    </div>
+    <iframe id="visualizar-pdf" width="100%" height="600px"></iframe>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.4.0/jspdf.umd.min.js"></script>
+    <script>
+        const { jsPDF } = window.jspdf;
+
+        const data = {
+            name: "João Silva",
+            email: "joao.silva@example.com",
+            phone: "+55 11 91234-5678",
+            description: "Desenvolvedor web apaixonado por criar soluções inovadoras e eficientes. Apaixonado por aprender e compartilhar conhecimentos. Apaixonado por escrever código. Apaixonado por tecnologia. Apaixonado por aprender e compartilhar conhecimentos. Apaixonado por escrever código.",
+            image: "https://example.com/profile-image.jpg",
+            website: "https://joaosilva.dev",
+            linkedin: "https://www.linkedin.com/in/joaosilva/",
+            github: "https://github.com/joaosilva",
+            skills: [
+                "JavaScript",
+                "HTML",
+                "CSS",
+                "React",
+                "Node.js",
+                "MongoDB",
+                "TypeScript",
+                "Git"
+            ],
+            workExperience: [
+                {
+                    company: "Tech Solutions",
+                    role: "Desenvolvedor Front-End",
+                    startDate: "2022-01",
+                    endDate: "2023-12",
+                    description: "Desenvolvimento de interfaces responsivas e otimização de performance de aplicações web."
+                },
+                {
+                    company: "Web Innovators",
+                    role: "Estagiário de Desenvolvimento",
+                    startDate: "2021-06",
+                    endDate: "2021-12",
+                    description: "Apoio no desenvolvimento de aplicações web e manutenção de sistemas existentes."
+                }
+            ],
+            education: [
+                {
+                    institution: "Universidade de Tecnologia",
+                    degree: "Bacharelado em Ciência da Computação",
+                    startDate: "2018-01",
+                    endDate: "2022-12"
+                }
+            ],
+            courses: [
+                {
+                    title: "Curso Avançado de React",
+                    institution: "Rocketseat",
+                    completionDate: "2023-06"
+                },
+                {
+                    title: "JavaScript para Iniciantes",
+                    institution: "Alura",
+                    completionDate: "2021-04"
+                }
+            ]
+        };
+
+
+        // Referência ao iframe
+        const iframe = document.getElementById('visualizar-pdf');
+
+        // Função para gerar o PDF e mostrar no iframe
+        async function atualizarPDF() {
+            const pdf = new jsPDF();
+
+            // Adicionando imagem
+            const image = document.getElementById('imagem').files[0];
+            const imageBase64 = await convertToBase64(image);
+            pdf.addImage(imageBase64, "JPEG", 10, 10, 50, 50);
+
+            // Adicionando conteúdo dinâmico
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(20);
+            pdf.text(data['name'], 70, 15);
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(12);
+            pdf.text(`Email: ${data['email']}`, 70, 25);
+            pdf.text(`Telefone: ${data['phone']}`, 70, 35);
+            pdf.text(`Linkedin: ${data['linkedin']}`, 70, 45);
+            pdf.text(`Website: ${data['website']}`, 70, 55);
+
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.text("Sobre mim", 10, 72);
+
+            pdf.setFont("helvetica", "normal");
+            let currentY = 80;
+            pdf.setFontSize(12);
+            const descriptionLines = pdf.splitTextToSize(data['description'], 190); // Quebra o texto em várias linhas, se necessário
+            pdf.text(descriptionLines, 10, currentY);
+            currentY += descriptionLines.length * 8; // Ajusta currentY com base no número de linhas de descrição
+
+            // Adiciona o título "Experiência"
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.text("Experiência", 10, currentY);
+            currentY += 5; // Ajusta a posição para a próxima seção
+
+            // Adiciona as experiências de trabalho
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(12);
+
+            data['workExperience'].forEach((experience, index) => {
+                let insideCurrentY = currentY;
+                const { company, role, startDate, endDate, description } = experience;
+                pdf.text(`${index + 1}. ${company}`, 10, insideCurrentY + 5);
+                insideCurrentY += 10;
+                pdf.text(`Cargo: ${role}`, 10, insideCurrentY + 5);
+                insideCurrentY += 10;
+                pdf.text(`Período: ${startDate} - ${endDate}`, 10, insideCurrentY + 5);
+                insideCurrentY += 10;
+                pdf.text(`Descrição: ${description}`, 10, insideCurrentY + 5);
+                insideCurrentY += 10;
+
+                insideCurrentY = insideCurrentY - currentY;
+                currentY += insideCurrentY + 10;
+            });
+
+            // Adiciona o título "Formação Acadêmica"
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.text("Formação Acadêmica", 10, currentY);
+            currentY += 5; // Ajusta a posição para a segunda seção
+
+            // Adiciona as formações acadêmicas
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(12);
+            data['education'].forEach((education, index) => {
+                let insideCurrentY = currentY;
+                const { institution, degree, startDate, endDate } = education;
+                pdf.text(`${index + 1}. ${institution}`, 10, insideCurrentY + (index * 10));
+                pdf.text(`Curso: ${degree}`, 10, insideCurrentY + (index * 10) + 10);
+                pdf.text(`Período: ${startDate} - ${endDate}`, 10, insideCurrentY + (index * 10) + 20);
+                insideCurrentY = insideCurrentY - currentY;
+                currentY += insideCurrentY + 10;
+            });
+
+            /*
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.text("Formação Acadêmica", 10, 170);
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(12);
+            data['education'].forEach((education, index) => {
+                const { institution, degree, startDate, endDate } = education;
+                pdf.text(`${index + 1}. ${institution}`, 10, 180 + (index * 10));
+                pdf.text(`Curso: ${degree}`, 10, 190 + (index * 10));
+                pdf.text(`Período: ${startDate} - ${endDate}`, 10, 200 + (index * 10));
+            });
+
+            pdf.setFont("helvetica", "bold");
+            pdf.setFontSize(16);
+            pdf.text("Cursos", 10, 230);
+
+            pdf.setFont("helvetica", "normal");
+            pdf.setFontSize(12);
+            data['courses'].forEach((course, index) => {
+                const { title, institution, completionDate } = course;
+                pdf.text(`${index + 1}. ${title}`, 10, 240 + (index * 10));
+                pdf.text(`Instituição: ${institution}`, 10, 250 + (index * 10));
+                pdf.text(`Conclusão: ${completionDate}`, 10, 260 + (index * 10));
+            });
+            */
+
+            // Gerar o PDF em formato Blob
+            const pdfBlob = pdf.output('blob');
+
+            // Criar uma URL para o Blob e mostrar no iframe
+            const pdfUrl = URL.createObjectURL(pdfBlob);
+            iframe.src = pdfUrl;
+        }
+
+        function convertToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // Atualizar o PDF ao clicar no botão
+        document.getElementById('atualizar-pdf').addEventListener('click', atualizarPDF);
+
+        // Gerar o PDF na inicialização
+        atualizarPDF();
+    </script>
+</body>
+</html>
